@@ -83,7 +83,6 @@ def main():
     pygame.display.set_caption("Game Of Life Computer Vis")
     clock = pygame.time.Clock()
 
-    # initialize grid: rows x cols (row = y)
     # grid = generate_random_grid(GRID_COLS, GRID_ROWS)
     grid = Grid(GRID_COLS, GRID_ROWS)
     update_counter = 0
