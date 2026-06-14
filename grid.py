@@ -1,6 +1,5 @@
 # Grid class for Game of Life implementation
 # uses a padded grid
-# TODO gpu accelerate so each cell runs their update in parallel
 class Grid:
     def __init__(self, cols: int, rows: int):
         self.cols = cols
@@ -29,6 +28,7 @@ class Grid:
                 count += self.get_cell(nr, nc)
         return count
 
+# TODO gpu accelerate so each cell runs their update in parallel
     def update(self):
         new_grid = [[0 for _ in range(self.cols + 2)] 
                     for _ in range(self.rows + 2)]
