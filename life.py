@@ -1,5 +1,7 @@
+from noisegrid import NoiseGrid
 from camera import Camera
 from grid import Grid
+from pygame import Color
 import cv2 as cv
 import pygame
 import random
@@ -16,11 +18,12 @@ GRID_COLS = 200
 GRID_ROWS = 150
 
 # Appearance
-BG_COLOR = (10, 10, 10)
-LINE_COLOR = (50, 50, 50)
+BG_COLOR = Color(10, 10, 10)
+SCREEN_COLOR = Color(10, 10, 10, 0)
+LINE_COLOR = Color(50, 50, 50)
 FPS = 60
 TICKS_PER_UPDATE = 1
-ALIVE_COLOR = (200, 200, 200)
+ALIVE_COLOR = Color(200, 200, 200)
 
 def generate_random_grid(cols: int, rows: int) -> Grid:
     grid = Grid(cols, rows)
@@ -55,8 +58,9 @@ def draw_grid(surface : pygame.Surface, grid : Grid,
         pygame.draw.line(surface, color, (0, y), (width, y))
 
 
-def draw_cells(surface: pygame.Surface, grid: Grid, 
+def draw_cells(surface: pygame.Surface, grid: Grid | NoiseGrid, 
                width=WINDOW_WIDTH, height=WINDOW_HEIGHT,
+               dead_color = Color(0, 0, 0, 0),
                alive_color=ALIVE_COLOR):
     rows = grid.rows
     cols = grid.cols
@@ -68,10 +72,10 @@ def draw_cells(surface: pygame.Surface, grid: Grid,
 
     for r in range(rows):
         for c in range(cols):
-            if grid.get_cell(r, c) == 1:
-                rect = pygame.Rect(c * cell_w + 1, r * cell_h + 1,
-                                   max(0, cell_w - 1), max(0, cell_h - 1))
-                pygame.draw.rect(surface, alive_color, rect)
+            color = Color.lerp(dead_color, alive_color, grid.get_cell(r, c))
+            rect = pygame.Rect(c * cell_w + 1, r * cell_h + 1,
+                               max(0, cell_w - 1), max(0, cell_h - 1))
+            pygame.draw.rect(surface, color, rect)
 
 def main():
     print("initializing camera")
@@ -80,15 +84,18 @@ def main():
 
     pygame.init()
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    background = pygame.Surface(screen.get_size())
     pygame.display.set_caption("Game Of Life Computer Vis")
     clock = pygame.time.Clock()
 
     # grid = generate_random_grid(GRID_COLS, GRID_ROWS)
     grid = Grid(GRID_COLS, GRID_ROWS)
+    bg_grid = NoiseGrid(GRID_COLS, GRID_ROWS, seed=42, scale=0.2, time_step=1)
     update_counter = 0
 
     running = True
     while running:
+        # Event handling
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -105,19 +112,26 @@ def main():
                 current_state = grid.get_cell(r, c)
                 grid.set_cell(r, c, 0 if current_state == 1 else 1)
 
+        # Update grid state
         update_counter += 1
         if update_counter >= TICKS_PER_UPDATE:
             update_counter = 0
-            grid.update()  # update grid state for next frame
+            grid.update()
             write_from_camera(grid, camera)
-        # TODO: try one with faster framerate
-        screen.fill(BG_COLOR)
-        draw_cells(screen, grid)
-        draw_grid(screen, grid)
+        bg_grid.update()
 
+
+        # Draw
+        background.fill(BG_COLOR)
+        screen.fill(SCREEN_COLOR)
+        draw_cells(background, bg_grid)
+        # draw_cells(screen, grid)
+        draw_grid(screen, grid)
+        screen.blit(background, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
+        pygame.display.set_caption(f"Game Of Life Computer Vis - FPS: {clock.get_fps()}")
         pygame.display.flip()
         clock.tick(FPS)
-    # camera.release()
+    camera.release()
     pygame.quit()
     sys.exit(0)
 
