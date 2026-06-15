@@ -47,6 +47,19 @@ def test_count_alive_neighbors_corner():
     g.set_cell(1, 1, 1)
     assert g.count_alive_neighbors(0, 0) == 3
 
+def test_update():
+    g = Grid(3, 3)
+    # Blinker pattern
+    g.set_cell(1, 0, 1)
+    g.set_cell(1, 1, 1)
+    g.set_cell(1, 2, 1)
+
+    g.update()
+
+    assert g.get_cell(0, 1) == 1
+    assert g.get_cell(1, 1) == 1
+    assert g.get_cell(2, 1) == 1
+
 if __name__ == "__main__":
     test_init()
     test_set_get_cell_inside()
@@ -54,4 +67,5 @@ if __name__ == "__main__":
     test_get_cell_out_of_bounds_returns_zero()
     test_count_alive_neighbors_center()
     test_count_alive_neighbors_corner()
+    test_update()
     print("All tests passed!")

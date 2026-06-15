@@ -1,10 +1,14 @@
 # Grid class for Game of Life implementation
 # uses a padded grid
+import numpy as np
 class Grid:
     def __init__(self, cols: int, rows: int):
         self.cols = cols
         self.rows = rows
-        self.grid = [[0 for _ in range(cols + 2)] for _ in range(rows + 2)]
+        self.grid = np.array(
+            [[0 for _ in range(cols + 2)] for _ in range(rows + 2)],
+            dtype=np.int32
+            )
         print(f"Initialized grid with {cols} cols and {rows} rows")
 
     def set_cell(self, r: int, c: int, value: int):
@@ -28,10 +32,8 @@ class Grid:
                 count += self.get_cell(nr, nc)
         return count
 
-# TODO gpu accelerate so each cell runs their update in parallel
     def update(self):
-        new_grid = [[0 for _ in range(self.cols + 2)] 
-                    for _ in range(self.rows + 2)]
+        new_grid = np.zeros((self.rows + 2, self.cols + 2), dtype=np.uint32)
         for r in range(self.rows):
             for c in range(self.cols):
                 alive_neighbors = self.count_alive_neighbors(r, c)
