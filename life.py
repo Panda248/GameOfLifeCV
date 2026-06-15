@@ -1,7 +1,9 @@
+from gpugrid import GPUGrid
 from noisegrid import NoiseGrid
 from camera import Camera
 from grid import Grid
 from pygame import Color
+import pyopencl as cl
 import cv2 as cv
 import pygame
 import random
@@ -14,16 +16,17 @@ WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
 
 # Grid size (columns, rows)
-GRID_COLS = 200
-GRID_ROWS = 150
+GRID_COLS = 160
+GRID_ROWS = 120
 
 # Appearance
 BG_COLOR = Color(10, 10, 10)
 SCREEN_COLOR = Color(10, 10, 10, 0)
 LINE_COLOR = Color(50, 50, 50)
-FPS = 60
+FPS = 30
 TICKS_PER_UPDATE = 1
 ALIVE_COLOR = Color(200, 200, 200)
+
 
 def generate_random_grid(cols: int, rows: int) -> Grid:
     grid = Grid(cols, rows)
@@ -89,7 +92,8 @@ def main():
     clock = pygame.time.Clock()
 
     # grid = generate_random_grid(GRID_COLS, GRID_ROWS)
-    grid = Grid(GRID_COLS, GRID_ROWS)
+    # grid = Grid(GRID_COLS, GRID_ROWS)
+    grid = GPUGrid(GRID_COLS, GRID_ROWS)
     bg_grid = NoiseGrid(GRID_COLS, GRID_ROWS, seed=42, scale=0.2, time_step=1)
     update_counter = 0
 
@@ -124,8 +128,8 @@ def main():
         # Draw
         background.fill(BG_COLOR)
         screen.fill(SCREEN_COLOR)
-        draw_cells(background, bg_grid)
-        # draw_cells(screen, grid)
+        # draw_cells(background, bg_grid)
+        draw_cells(screen, grid)
         draw_grid(screen, grid)
         screen.blit(background, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
         pygame.display.set_caption(f"Game Of Life Computer Vis - FPS: {clock.get_fps()}")
