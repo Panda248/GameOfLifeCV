@@ -84,6 +84,7 @@ class Camera:
         if not ret:
             print("capture failed")
             raise RuntimeError("Failed to capture frame from camera")
+        frame = cv.fastNlMeansDenoisingColored(frame, None, 0, 5)
         rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
         hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
         ycbcr = cv.cvtColor(frame, cv.COLOR_BGR2YCrCb)

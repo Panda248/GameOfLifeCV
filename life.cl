@@ -1,4 +1,4 @@
-__kernel void update(const int M, const int N,
+__kernel void update(const int M,
             __global const int* prev, __global int* next) {
     const int row = get_global_id(0);
     const int col = get_global_id(1);

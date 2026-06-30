@@ -13,10 +13,9 @@ class GPUGrid(Grid):
         self.context = cl.create_some_context(interactive=False)
         self.queue = cl.CommandQueue(self.context)
         self.program = cl.Program(self.context, open("life.cl").read()).build()
-        self.kernel = self.program.update
+        self.kernel = cl.Kernel(self.program, "update")
 
     def update(self):
-        kern = self.program.update
         
         prev = cl_array.to_device(self.queue, self.grid)
         new_grid = cl_array.empty(self.queue, self.grid.shape, dtype=self.grid.dtype)
@@ -28,6 +27,6 @@ class GPUGrid(Grid):
             return
         
         self.kernel(self.queue, (self.rows, self.cols), None, 
-            cols_padded, rows, prev.data, new_grid.data)
+            cols_padded, prev.data, new_grid.data)
 
         self.grid = new_grid.get()

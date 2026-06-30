@@ -3,30 +3,36 @@ from noisegrid import NoiseGrid
 from camera import Camera
 from grid import Grid
 from pygame import Color
-import pyopencl as cl
 import cv2 as cv
+from multiprocessing import Event, Process
 import pygame
 import random
 import sys
+import os
 
 
 # Configuration: adjust these values to change resolution and grid size
 # Window resolution (pixels)
-WINDOW_WIDTH = 800
-WINDOW_HEIGHT = 600
+WINDOW_WIDTH = 1280
+WINDOW_HEIGHT = 720
 
 # Grid size (columns, rows)
-GRID_COLS = 160
-GRID_ROWS = 120
+GRID_COLS = 64
+GRID_ROWS = 36
 
 # Appearance
 BG_COLOR = Color(10, 10, 10)
 SCREEN_COLOR = Color(10, 10, 10, 0)
 LINE_COLOR = Color(50, 50, 50)
-FPS = 30
+FPS = 12
 TICKS_PER_UPDATE = 1
 ALIVE_COLOR = Color(200, 200, 200)
 
+# Game
+running = True
+grid = GPUGrid(GRID_COLS, GRID_ROWS)
+
+os.environ["PYOPENCL_COMPILER_OUTPUT"] = "1"
 
 def generate_random_grid(cols: int, rows: int) -> Grid:
     grid = Grid(cols, rows)
@@ -106,38 +112,47 @@ def main():
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                # toggle cell state on click
-                mouse_x, mouse_y = event.pos
-                cell_w = WINDOW_WIDTH / grid.cols
-                cell_h = WINDOW_HEIGHT / grid.rows
-                c = int(mouse_x // cell_w)
-                r = int(mouse_y // cell_h)
-                current_state = grid.get_cell(r, c)
-                grid.set_cell(r, c, 0 if current_state == 1 else 1)
 
         # Update grid state
         update_counter += 1
         if update_counter >= TICKS_PER_UPDATE:
             update_counter = 0
+            
             grid.update()
             write_from_camera(grid, camera)
-        bg_grid.update()
+        # bg_grid.update()
 
 
         # Draw
-        background.fill(BG_COLOR)
+        # background.fill(BG_COLOR)
         screen.fill(SCREEN_COLOR)
         # draw_cells(background, bg_grid)
         draw_cells(screen, grid)
-        draw_grid(screen, grid)
-        screen.blit(background, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
+        # draw_grid(screen, grid)
+        # screen.blit(background, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
         pygame.display.set_caption(f"Game Of Life Computer Vis - FPS: {clock.get_fps()}")
         pygame.display.flip()
         clock.tick(FPS)
     camera.release()
     pygame.quit()
     sys.exit(0)
+
+def capture_camera_image(stop_event: Event):
+    camera = Camera()
+    try:
+        while not stop_event.is_set():
+            # write_from_camera(grid, camera)
+            r = camera.get_skin()
+            if r is not None:
+                cv.imshow("Camera Frame", r)
+            if cv.waitKey(1) & 0xFF == ord('q'):
+                stop_event.set()
+                break
+            # write_from_camera(grid, camera)
+    finally:
+        camera.release()
+        cv.destroyAllWindows()
+
 
 
 if __name__ == "__main__":

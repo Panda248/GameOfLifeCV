@@ -1,21 +1,24 @@
 # Grid class for Game of Life implementation
 # uses a padded grid
 import numpy as np
-class Grid:
+
+from grid import Grid
+class OptGrid(Grid):
     def __init__(self, cols: int, rows: int):
-        self.cols = cols
-        self.rows = rows
-        self.grid = np.array(
-            [[0 for _ in range(cols + 2)] for _ in range(rows + 2)],
-            dtype=np.int32
-            )
+        super().__init__(cols, rows)
+
         print(f"Initialized grid with {cols} cols and {rows} rows")
 
     def set_cell(self, r: int, c: int, value: int):
+        if not (0 <= r < self.rows and 0 <= c < self.cols):
+            print(f"Cell coordinates ({r}, {c}) are out of bounds")
+            return
         self.grid[r + 1][c + 1] = value
 
     def get_cell(self, r: int, c: int) -> int:
-        return self.grid[r + 1][c + 1]
+        if 0 <= r < self.rows and 0 <= c < self.cols:
+            return self.grid[r + 1][c + 1]
+        return 0
 
     def count_alive_neighbors(self, r: int, c: int) -> int:
         count = 0
